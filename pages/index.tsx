@@ -21,7 +21,7 @@ const Index: NextPage = () => {
             <span>Sign in with Google</span>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center" onClick={signOut}>
+          <button className="flex flex-col items-center justify-center" onClick={() => signOut}>
             <Image
               src={session?.user?.image as string}
               width="80"
@@ -30,8 +30,8 @@ const Index: NextPage = () => {
               alt={session?.user?.name as string}
               priority={true}	
             />
-            <p className="mt-2">{session?.user?.name}</p>
-          </div>
+            <span className="mt-2">{session?.user?.name}</span>
+          </button>
         )}
       </div>
     </div>
