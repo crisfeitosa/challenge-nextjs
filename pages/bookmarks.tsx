@@ -34,11 +34,6 @@ const Bookmarks: NextPage = () => {
       prevBookmarks.filter(bookmark => bookmark.id !== id));
   }
 
-  const logOutAccount = () => {
-    signOut
-    router.push('/signin')
-  }
-
   useEffect(() => {
     const json = localStorage.getItem('bookmarks');
     const loadedBookmarks = JSON.parse(json!);
@@ -71,7 +66,7 @@ const Bookmarks: NextPage = () => {
             alt={session?.user?.name as string}
             priority={true}	
           />
-          <h1 className='font-semibold'>Welcome {user?.name.split(' ')[0]}</h1>
+          <h1 className='font-semibold'>Welcome {user && user.name.split(' ')[0]}</h1>
         </div>
         <p>All bookmarks: {bookmarks.length}</p>
       </div>
