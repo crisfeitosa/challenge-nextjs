@@ -9,6 +9,10 @@ const Index: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
+  function handleLogOut() {
+    signOut();
+  }
+
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-gray-900 p-4">
       <div
@@ -21,7 +25,7 @@ const Index: NextPage = () => {
             <span>Sign in with Google</span>
           </div>
         ) : (
-          <button className="flex flex-col items-center justify-center" onClick={() => signOut}>
+          <button className="flex flex-col items-center justify-center" onClick={handleLogOut}>
             <Image
               src={session?.user?.image as string}
               width="80"

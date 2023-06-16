@@ -5,6 +5,11 @@ import { getServerSession } from "next-auth/next";
 import { getProviders, signIn } from 'next-auth/react';
 import { authOptions } from './api/auth/[...nextauth]';
 
+interface IProvider {
+  id: string;
+  name: string;
+}
+
 export default function SignIn({ providers }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <div className="relative flex h-screen w-screen items-center justify-center">
@@ -20,14 +25,14 @@ export default function SignIn({ providers }: InferGetServerSidePropsType<typeof
         {providers && 
           Object.values(providers).map((provider) => (
             <div
-              key={provider?.name}
+              key={(provider as IProvider)?.name}
               className="rounded-md border bg-[rgba(0,0,0,0.4)] px-4 py-2"
             >
               <button
-                onClick={() => signIn(provider?.id)}
+                onClick={() => signIn((provider as IProvider)?.id)}
                 className="font-semibold text-white"
               >
-                Sign in with {provider?.name}
+                Sign in with {(provider as IProvider)?.name}
               </button>
             </div>
           ))}
@@ -47,6 +52,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const providers = await getProviders();
   
   return {
-    props: { providers: providers ?? [] },
+    props: { providers: providers ?? {} },
   }
 }
