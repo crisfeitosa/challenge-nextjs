@@ -16,6 +16,7 @@ const Bookmarks: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const [bookmarks, setBookmarks] = useState<IBookmark[]>([]);
+  const user = session ? session?.user : null;
 
   const addBookmark = (bookmark: IBookmark) => {
     setBookmarks(prevBookmarks => [
@@ -70,7 +71,7 @@ const Bookmarks: NextPage = () => {
             alt={session?.user?.name as string}
             priority={true}	
           />
-          <h1 className='font-semibold'>Welcome {session?.user?.name.split(' ')[0]}</h1>
+          <h1 className='font-semibold'>Welcome {user?.name.split(' ')[0]}</h1>
         </div>
         <p>All bookmarks: {bookmarks.length}</p>
       </div>
