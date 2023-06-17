@@ -12,6 +12,9 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_SECRET as string,
     }),
   ],
+  pages: {
+    signIn: "/signin",
+  },
   adapter: FirebaseAdapter({
     db: db,
     ...firestoreFunctions,

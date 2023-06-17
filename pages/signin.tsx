@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import type { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getServerSession } from "next-auth/next";
-import { getProviders, signIn } from 'next-auth/react';
+import { getProviders, signIn as SignIntoProvider } from 'next-auth/react';
 import { authOptions } from './api/auth/[...nextauth]';
 
 interface IProvider {
@@ -29,7 +29,7 @@ export default function SignIn({ providers }: InferGetServerSidePropsType<typeof
               className="rounded-md border bg-[rgba(0,0,0,0.4)] px-4 py-2"
             >
               <button
-                onClick={() => signIn((provider as IProvider)?.id)}
+                onClick={() => SignIntoProvider((provider as IProvider)?.id, {callbackUrl: '/bookmarks'})}
                 className="font-semibold text-white"
               >
                 Sign in with {(provider as IProvider)?.name}
