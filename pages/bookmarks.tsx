@@ -1,81 +1,134 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import type { GetServerSideProps, NextPage } from 'next';
-import { signOut, useSession, getSession } from 'next-auth/react';
+import type { NextPage } from 'next';
 import Image from 'next/image';
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import BookmarkList from '../src/Components/BookmarkList/BookmarkList';
 import BookmarkForm from '../src/Components/BookmarkForm/BookmarkForm';
-
-interface IBookmark {
-  id: string;
-  title: string;
-  link: string;
-}
+import useAuth from '../hooks/useAuth';
+import { addBookmark, deleteBookmark } from "../api/bookmarks";
+import { db } from '../firebase.config';
+import { IBookmark } from '../src/Components/Bookmark/Bookmark';
+import { ITagOption, tagsOptions } from '../src/utils/tagsOptions';
 
 const Bookmarks: NextPage = () => {
-  const { data: session } = useSession();
-  const router = useRouter();
+  const { isLoggedIn, user } = useAuth();
   const [bookmarks, setBookmarks] = useState<IBookmark[]>([]);
-  const user = session ? session?.user : null;
 
-  const addBookmark = (bookmark: IBookmark) => {
-    setBookmarks(prevBookmarks => [
-      ...prevBookmarks,
-      {
-        id: bookmark.id,
-        title: bookmark.title,
-        link: bookmark.link,
-      }
-    ]);
-  }
+  function handleFilter(event: Event) {
+    const selectedTag = (event.target as HTMLInputElement).value;
 
-  const deleteBookmark = (id: string) => {
-    setBookmarks(prevBookmarks =>
-      prevBookmarks.filter(bookmark => bookmark.id !== id));
-  }
-
-  useEffect(() => {
-    const json = localStorage.getItem('bookmarks');
-    const loadedBookmarks = JSON.parse(json!);
-    if (loadedBookmarks) {
-      setBookmarks(loadedBookmarks)
+    if (!selectedTag) {
+      return refreshData();
     }
-  }, []);
+
+    const filteredBookmarks: IBookmark[] = [];
+
+    bookmarks.forEach(bookmark => { 
+      bookmark.tags.map(tag => {
+        if((tag.value).includes(selectedTag)) {
+          return filteredBookmarks.push(bookmark);
+        }
+      })
+    });
+
+    setBookmarks(filteredBookmarks);
+ }
+
+  const refreshData = () => {
+    if (!user) {
+      setBookmarks([]);
+      return;
+    }
+    const q = query(collection(db, "bookmarks"), where("userId", "==", user.email));
+
+    onSnapshot(q, (querySnapshot) => {
+      let bookmarksList: IBookmark[] = []
+
+      querySnapshot.docs.forEach((doc) => {
+        const newBookmarks: IBookmark = {
+          id: doc.id,
+          title: doc.data().title,
+          link: doc.data().link,
+          tags: doc.data().tags,
+        };
+
+        bookmarksList.push(newBookmarks);
+      });
+
+      setBookmarks(bookmarksList);
+    });
+  };
 
   useEffect(() => {
-    const json = JSON.stringify(bookmarks);
-    localStorage.setItem('bookmarks', json);
-  }, [bookmarks]);
+    refreshData();
+  }, [user]);
 
-  if (!session) {
-    return (
-      <div>
-        <p>Access Denied</p>
-      </div>
-  )}
+  const handleBookmarkCreate = async (bookmark: IBookmark) => {
+    const { id, title, link, tags } = bookmark;
+
+    if (!isLoggedIn) {
+      return;
+    }
+
+    const newBookmark = {
+      id,
+      title,
+      link,
+      tags,
+      userId: user.email,
+    };
+    await addBookmark(newBookmark);
+  };
+
+  const handleBookmarkDelete = async (id: string) => {
+    if (confirm("Are you sure you wanna delete this bookmark?")) {
+      deleteBookmark(id);
+    }
+  };
 
   return (
     <>
       <div className="flex flex-col space-y-4 w-100 mx-auto p-4 bg-gray-100">
-        <div className='flex items-center'>
-          <Image
-            src={session?.user?.image as string}
-            width="32"
-            height="32"
-            className="h-8 w-8 rounded-full shadow-lg mr-2"
-            alt={session?.user?.name as string}
-            priority={true}	
-          />
-          <h1 className='font-semibold'>Welcome {user && user.name.split(' ')[0]}</h1>
+        <div className="flex flex-col">
+          <div className='flex items-center mb-4'>
+            <Image
+              src={user?.photoURL as string}
+              width="32"
+              height="32"
+              className="h-8 w-8 rounded-full shadow-lg mr-2"
+              alt={user?.displayName as string}
+              priority={true}	
+            />
+            <h1 className='font-semibold'>Welcome {user && user.displayName.split(' ')[0]}</h1>
+          </div>
+          <p>All bookmarks: {bookmarks.length}</p>
         </div>
-        <p>All bookmarks: {bookmarks.length}</p>
+        <div>
+        
+        <div>Filter by Tag:</div>
+          <div>
+            <select
+              name="tag-list"
+              id="tag-list"
+              onChange={handleFilter}
+            >
+              <option value="">All</option>
+              {tagsOptions &&
+                tagsOptions.map(({ value, label }: ITagOption) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
-      <div className="flex flex-col h-screen w-screen bg-gray-900 py-8 px-4">
-          <div
-            className="flex flex-col h-auto w-11/12 mx-auto rounded-md border border-gray-300 p-4 bg-gray-100 mb-8"
-          >
+      <div className="flex flex-col w-screen bg-gray-900 py-8 px-4">
+        <div
+          className="flex flex-col h-auto w-11/12 mx-auto rounded-md border border-gray-300 p-4 bg-gray-100 mb-8"
+        >
           <BookmarkForm
-            addBookmark={addBookmark}
+            addBookmark={handleBookmarkCreate}
           />
         </div>
         <div
@@ -83,7 +136,7 @@ const Bookmarks: NextPage = () => {
         >
           <BookmarkList
             bookmarks={bookmarks}
-            deleteBookmark={deleteBookmark}
+            deleteBookmark={handleBookmarkDelete}
           />
         </div>
       </div>
@@ -92,14 +145,3 @@ const Bookmarks: NextPage = () => {
 }
 
 export default Bookmarks;
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  return {
-    props: {
-      session,
-    },
-  }
-};
-

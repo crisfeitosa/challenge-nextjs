@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import Select from "react-select";
 import { FcPlus } from 'react-icons/fc';
 import { v4 as uuidv4 } from 'uuid';
+import { ITagOption, tagsOptions } from "../../utils/tagsOptions";
 
-interface IBookmark {
+export interface IBookmark {
   id: string;
   title: string;
   link: string;
+  tags: ITagOption[];
 }
 
 interface IBookmarkFormProps {
@@ -15,17 +18,21 @@ interface IBookmarkFormProps {
 const BookmarkForm = ({ addBookmark }: IBookmarkFormProps) => {
   const [title, setTitle] = useState('');
   const [link, setLink] = useState('');
-
+  const [tags, setTags] = useState<ITagOption[]>([]);
+  const isDisabled = title.length < 1 || link.length < 1 || !tags.length
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addBookmark({ id: uuidv4(), title, link })
+  
+    addBookmark({ id: uuidv4(), title, link, tags })
     setTitle('');
     setLink('');
+    setTags([]);
   }
 
   return (
     <div className="flex items-center justify-cente p-4">
-      <form className="space-y-6" action="#" onSubmit={handleSubmit}>
+      <form className="container" action="#" onSubmit={handleSubmit}>
         <div className="flex flex-col pb-2">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="bmTitle">
             Title
@@ -38,7 +45,7 @@ const BookmarkForm = ({ addBookmark }: IBookmarkFormProps) => {
             value={title}
           />
         </div>
-        <div className="flex flex-col mb-2">
+        <div className="flex flex-col mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="bmLink">
             URL
           </label>
@@ -50,13 +57,30 @@ const BookmarkForm = ({ addBookmark }: IBookmarkFormProps) => {
             value={link}
           />
         </div>
-        <button
+        <div className="flex mx-auto mt-4">
+          <Select
+            defaultValue={tags}
+            onChange={(tag) => setTags(tag)}
+            value={tags}
+            isMulti
+            name="tags"
+            id="tags"
+            instanceId="tags"
+            options={tagsOptions}
+            className="lg:w-1/2 w-full"
+            classNamePrefix="select"
+          />
+        </div>
+        <div className="border px-4 py-2 bg-gray-900 rounded">
+          <button
             type="submit"
-            className="flex items-center rounded-md px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            disabled={isDisabled}
+            className="flex items-center justify-center px-8 p-3 text-white "
           >
             <FcPlus fontSize={30} className="mr-2" />
-            Add Bookmark
+              Add Bookmark
           </button>
+        </div>
       </form>
     </div>
   );

@@ -1,10 +1,4 @@
-import Bookmark from '../Bookmark/Bookmark';
-
-interface IBookmark {
-  id: string;
-  title: string;
-  link: string;
-}
+import Bookmark, { IBookmark } from '../Bookmark/Bookmark';
 
 interface IBookmarkListProps {
   bookmarks: IBookmark[];
@@ -16,7 +10,7 @@ const BookmarkList = ({ bookmarks, deleteBookmark }: IBookmarkListProps) => {
     <section>
         <h3 className='font-semibold mb-4'>Bookmarks</h3>
       <div className='flex flex-col mt-6'>
-        {
+        {bookmarks &&
           bookmarks.map(bookmark => (
             <Bookmark
               key={bookmark.id}
